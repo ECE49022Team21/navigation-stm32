@@ -42,7 +42,7 @@
 #include "lwgps_opts.h"
 #define LWESP_CFG_DISTANCE_BEARING  0
 //#define LWGPS_CFG_STATUS 1
-#define LWGPS_CFG_DOUBLE 0
+#define LWGPS_CFG_DOUBLE 1
 #endif /* LWGPS_IGNORE_USER_OPTS */
 
 #ifdef __cplusplus

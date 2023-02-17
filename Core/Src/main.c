@@ -132,6 +132,9 @@ int main(void)
   dec = (gps.longitude - (int) gps.longitude)*1000000;
   printf("%d\n\r", dec);
 
+  double a = 567.9982375734;
+  double b = a * 5.67;
+  int c = b;
   /* USER CODE END 2 */
 
   /* Infinite loop */
