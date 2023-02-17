@@ -1,13 +1,8 @@
 #ifndef LANDMARKS_HEADER_FILE_G
 #define LANDMARKS_HEADER_FILE_G
-#include "stdint.h"
-
 #define LEN_LANDMARKS 40
 
-
-typedef float float32_t;
-//typedef unsigned int uint32_t;
-typedef unsigned char uint8_t;
+#include "custom_typedef.h"
         
 typedef struct {
     float32_t x;
