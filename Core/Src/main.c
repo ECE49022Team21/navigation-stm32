@@ -26,6 +26,8 @@
 #include "dijkstra.h"
 #include "landmarks.h"
 #include "lwgps/lwgps.h"
+#include "k_d_tree.h"
+#include "proximity.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,6 +48,8 @@
 
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
+DMA_HandleTypeDef hdma_usart2_rx;
+
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
@@ -67,6 +71,7 @@ uint8_t nav_usart_data[10];
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_USB_OTG_FS_PCD_Init(void);
 static void MX_USART2_UART_Init(void);
@@ -76,7 +81,29 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void print_float(float_t num) {
+	int dec;
+	printf("%d.", (int) num);
+	dec = (num - (int) num)*1000000;
+	if (dec < 0) {
+		dec = dec * -1;
+	}
+	printf("%d", dec);
+}
 
+void single_run(coord_t* coord) {
+    float_t closest_distance;
+
+    uint8_t nearest_node = get_nearest_node(coord, &closest_distance);
+    printf("Distance to nearest node: ");
+    print_float(closest_distance);
+    printf("\n\r");
+    int source = nearest_node;
+    int destination = 1;
+    printf("Source: %d, %s\n\r", source, landmarks[source].name);
+    printf("Destination: %d, %s\n\r", destination, landmarks[destination].name);
+    dijkstra(source, destination);
+}
 /* USER CODE END 0 */
 
 /**
@@ -107,6 +134,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART3_UART_Init();
   MX_USB_OTG_FS_PCD_Init();
   MX_USART2_UART_Init();
@@ -118,23 +146,27 @@ int main(void)
   char gps_rx_test_data[] =
 		  "$GPGGA,203115.00,4026.88973,N,08656.54555,W,2,11,0.90,224.7,M,-33.5,M,,0000*6F\r\n";
   lwgps_process(&gps, gps_rx_test_data, strlen(gps_rx_test_data));
-  int source = 26;
-  int destination = 1;
-  printf("Source: %d, %s\n\r", source, landmarks[source].name);
-  printf("Destination: %d, %s\n\r", destination, landmarks[destination].name);
-  dijkstra(source, destination);
 
-  int dec;
-  printf("Lat: %d.", (int) gps.latitude);
-  dec = (gps.latitude - (int) gps.latitude)*1000000;
-  printf("%d\n\r", dec);
-  printf("Long: %d.", (int) gps.longitude);
-  dec = (gps.longitude - (int) gps.longitude)*1000000;
-  printf("%d\n\r", dec);
+  printf("Latitude: ");
+  print_float(gps.latitude);
+  printf("\n\r");
 
-  double a = 567.9982375734;
-  double b = a * 5.67;
-  int c = b;
+  printf("Longitude: ");
+  print_float(gps.longitude);
+  printf("\n\r");
+
+  coord_t coord;
+  // on oval near university: 40.4251986 -86.9149741: 22.69 m
+  coord.x = -86.9149741;
+  coord.y = 40.4251986;
+
+  single_run(&coord);
+
+  // between CL50 and SC: 40.4264039 -86.9147345: 27.83 m
+  coord.x = -86.9147345;
+  coord.y = 40.4264039;
+
+  single_run(&coord);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -308,6 +340,22 @@ static void MX_USB_OTG_FS_PCD_Init(void)
   /* USER CODE BEGIN USB_OTG_FS_Init 2 */
 
   /* USER CODE END USB_OTG_FS_Init 2 */
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Stream5_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Stream5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Stream5_IRQn);
 
 }
 

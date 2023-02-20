@@ -39,10 +39,13 @@
 
 /* Include application options */
 #ifndef LWGPS_IGNORE_USER_OPTS
+
 #include "lwgps_opts.h"
 #define LWESP_CFG_DISTANCE_BEARING  0
-//#define LWGPS_CFG_STATUS 1
-#define LWGPS_CFG_DOUBLE 1
+#define LWGPS_CFG_STATEMENT_GPGSA 0
+#define LWGPS_CFG_STATEMENT_GPRMC 0
+#define LWGPS_CFG_STATEMENT_GPGSV 0
+
 #endif /* LWGPS_IGNORE_USER_OPTS */
 
 #ifdef __cplusplus
