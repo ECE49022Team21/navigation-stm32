@@ -28,6 +28,9 @@
 #include "lwgps/lwgps.h"
 #include "k_d_tree.h"
 #include "proximity.h"
+#include "navigation.h"
+#include "helper_functions.h"
+#include "navigation_tests.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,19 +56,7 @@ DMA_HandleTypeDef hdma_usart2_rx;
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
 
 /* USER CODE BEGIN PV */
-#ifdef __GNUC__
-#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
-#else
-#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
-#endif
 
-PUTCHAR_PROTOTYPE
-{
-  HAL_UART_Transmit(&huart3, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
-  return ch;
-}
-
-uint8_t nav_usart_data[10];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -81,29 +72,9 @@ static void MX_USART2_UART_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void print_float(float_t num) {
-	int dec;
-	printf("%d.", (int) num);
-	dec = (num - (int) num)*1000000;
-	if (dec < 0) {
-		dec = dec * -1;
-	}
-	printf("%d", dec);
-}
 
-void single_run(coord_t* coord) {
-    float_t closest_distance;
 
-    uint8_t nearest_node = get_nearest_node(coord, &closest_distance);
-    printf("Distance to nearest node: ");
-    print_float(closest_distance);
-    printf("\n\r");
-    int source = nearest_node;
-    int destination = 1;
-    printf("Source: %d, %s\n\r", source, landmarks[source].name);
-    printf("Destination: %d, %s\n\r", destination, landmarks[destination].name);
-    dijkstra(source, destination);
-}
+
 /* USER CODE END 0 */
 
 /**
@@ -139,41 +110,30 @@ int main(void)
   MX_USB_OTG_FS_PCD_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  lwgps_t gps;
   lwgps_init(&gps);
-  //<NMEA(GPGGA, time=20:31:15, lat=40.4481621667, NS=N, lon=-86.9424258333, EW=W, quality=2, numSV=11, HDOP=0.9, alt=224.7, altUnit=M, sep=-33.5, sepUnit=M, diffAge=, diffStation=0)>
-  //b'$GPGGA,203115.00,4026.88973,N,08656.54555,W,2,11,0.90,224.7,M,-33.5,M,,0000*6F\r\n'
-  char gps_rx_test_data[] =
-		  "$GPGGA,203115.00,4026.88973,N,08656.54555,W,2,11,0.90,224.7,M,-33.5,M,,0000*6F\r\n";
-  lwgps_process(&gps, gps_rx_test_data, strlen(gps_rx_test_data));
-
-  printf("Latitude: ");
-  print_float(gps.latitude);
-  printf("\n\r");
-
-  printf("Longitude: ");
-  print_float(gps.longitude);
-  printf("\n\r");
-
-  coord_t coord;
-  // on oval near university: 40.4251986 -86.9149741: 22.69 m
-  coord.x = -86.9149741;
-  coord.y = 40.4251986;
-
-  single_run(&coord);
-
-  // between CL50 and SC: 40.4264039 -86.9147345: 27.83 m
-  coord.x = -86.9147345;
-  coord.y = 40.4264039;
-
-  single_run(&coord);
+  //test_runs();
+  HAL_UART_Receive_DMA(&huart2, nav_rx_data, UART2_RX_DMA_BUFFER_SIZE);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   printf("\n\r");
-  while (1)
-  {
+
+  int destination = 1;
+  int fix_status;
+  printf("Waiting for GPS Fix...\n\r");
+  do {
+	  fix_status = navigation_main_init(destination);
+  } while(fix_status == 0);
+  while (1) {
+	navigation_main_loop();
+	continue;
+	printf("Latitude: ");
+	print_float(coord.y);
+	printf(" ");
+	printf("Longitude: ");
+	print_float(coord.x);
+	printf("\n\r");
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
