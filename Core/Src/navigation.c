@@ -18,7 +18,7 @@ float_t path_distances[MAX_PATH_LENGTH] = {
 
 int navigation_main_init(uint8_t destination) {
 	if (gps.fix == 0) {
-		printf("GPS Fix is 0!\n\r");
+		//printf("GPS Fix is 0!\n\r");
 		return 0;
 	} else {
 		printf("GPS Fix: %d. Number of satellites initially: %d\n\r", gps.fix, gps.sats_in_use);
@@ -42,7 +42,7 @@ int navigation_main_init(uint8_t destination) {
 	printf("Source: %d, %s\n\r", source, landmarks[source].name);
 	printf("Destination: %d, %s\n\r", destination, landmarks[destination].name);
 	dijkstra(source, destination);
-	return 1;
+	return gps.sats_in_use;
 }
 
 void navigation_main_loop() {
@@ -52,7 +52,7 @@ void navigation_main_loop() {
 	last_coord.y = coord.y;
 	uint8_t nearest_node = get_nearest_node(&last_coord, &closest_distance);
 	// (50 ft + 5 meters)^2 = 0.0001581697 mi^2
-	if (closest_distance < 0.0001581697) {
+	if (closest_distance < 0.0001581697 + landmarks[nearest_node].buffer_distance) {
 		if (visited_nodes[nearest_node] == 0) {
 			visited_nodes[nearest_node] = 1;
 			// Call Brain function here

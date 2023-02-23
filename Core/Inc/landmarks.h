@@ -11,6 +11,7 @@ typedef struct {
     uint32_t list_len;
     uint8_t* adj_list;
     float_t* dist_list;
+    float_t buffer_distance;
 } landmark_t;
         
 
