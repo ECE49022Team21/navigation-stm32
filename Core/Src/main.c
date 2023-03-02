@@ -119,7 +119,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   printf("\n\r");
 
-  int destination = 1;
+  int destination = 34;
   int fix_status;
   printf("Waiting for GPS Fix...\n\r");
   do {
